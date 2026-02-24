@@ -84,10 +84,6 @@
             opacity: 0.9;
         }
 
-        .btn-translate:active {
-            transform: scale(0.98);
-        }
-
         #result-box {
             margin-top: 30px;
             padding: 20px;
@@ -106,11 +102,6 @@
             white-space: pre-wrap;
         }
 
-        #result-box:hover {
-            background: #FAFAFA;
-        }
-
-        /* 翻譯中動畫 */
         .loading #result-text {
             animation: pulse 1.2s infinite ease-in-out;
             color: var(--apple-gray);
@@ -152,8 +143,8 @@
 <div id="toast" class="toast">已自動複製結果</div>
 
 <script>
-    // ⚠️ 確保這裡填入的是你最新的 API Key
-    const apiKey = "AIzaSyCXQ2JQ-vrqTA7pWhXJYvUejYfLeRWDOZQ"; 
+    // 確保這裡貼上你最新的 API Key
+    const apiKey = "AIzaSyBhLAqWjIi2LN3Y2bf_SjBeEImnFD1_k2k"; 
 
     async function translateText() {
         const input = document.getElementById('inputText');
@@ -163,13 +154,12 @@
         
         if (!text) return;
 
-        // 進入讀取狀態
         resultBox.classList.add('loading');
         resultText.innerText = "Processing...";
 
         try {
-            // 使用穩定版 1.5-flash 避免 404
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            // 切換至 v1 正式版 API，並使用最相容的模型路徑
+            const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
             
             const response = await fetch(url, {
                 method: 'POST',
@@ -191,27 +181,30 @@
             const data = await response.json();
             
             if (data.error) {
+                // 如果 API 返回錯誤，直接顯示詳細訊息
                 throw new Error(data.error.message);
             }
 
-            const translated = data.candidates[0].content.parts[0].text.trim();
-            
-            // 顯示結果
-            resultText.innerText = translated;
-            resultText.style.color = "var(--apple-text)";
-            resultBox.classList.remove('loading');
-            
-            // 自動複製到剪貼簿
-            navigator.clipboard.writeText(translated);
-            showToast();
-            
-            // 自動清空輸入框
-            input.value = "";
+            if (data.candidates && data.candidates[0].content.parts[0].text) {
+                const translated = data.candidates[0].content.parts[0].text.trim();
+                resultText.innerText = translated;
+                resultText.style.color = "var(--apple-text)";
+                
+                // 自動複製
+                navigator.clipboard.writeText(translated);
+                showToast();
+                
+                // 自動清空
+                input.value = "";
+            } else {
+                throw new Error("無法取得翻譯結果");
+            }
 
         } catch (error) {
             console.error(error);
             resultText.innerText = "Error: " + error.message;
             resultText.style.color = "#FF3B30";
+        } finally {
             resultBox.classList.remove('loading');
         }
     }
