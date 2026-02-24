@@ -1,156 +1,4 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Translator</title>
-    <style>
-        :root {
-            --apple-bg: #F5F5F7;
-            --apple-card: rgba(255, 255, 255, 0.8);
-            --apple-text: #1D1D1F;
-            --apple-blue: #007AFF;
-            --apple-gray: #86868B;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro TC", sans-serif;
-            background-color: var(--apple-bg);
-            color: var(--apple-text);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        .container {
-            background: var(--apple-card);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            padding: 40px;
-            border-radius: 30px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.06);
-            width: 100%;
-            max-width: 440px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            transition: transform 0.3s ease;
-        }
-
-        h2 {
-            font-size: 28px;
-            font-weight: 600;
-            margin-bottom: 24px;
-            text-align: center;
-            letter-spacing: -0.022em;
-        }
-
-        .input-wrapper {
-            position: relative;
-            margin-bottom: 20px;
-        }
-
-        textarea {
-            width: 100%;
-            height: 160px;
-            border: none;
-            border-radius: 18px;
-            padding: 20px;
-            box-sizing: border-box;
-            font-size: 17px;
-            line-height: 1.5;
-            resize: none;
-            background: rgba(0, 0, 0, 0.03);
-            outline: none;
-            transition: all 0.2s ease;
-        }
-
-        textarea:focus {
-            background: rgba(0, 0, 0, 0.05);
-            box-shadow: inset 0 0 0 2px var(--apple-blue);
-        }
-
-        .btn-translate {
-            width: 100%;
-            background-color: var(--apple-text);
-            color: white;
-            border: none;
-            padding: 16px;
-            border-radius: 15px;
-            font-size: 17px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .btn-translate:hover {
-            transform: scale(1.02);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
-        #result-box {
-            margin-top: 30px;
-            padding: 20px;
-            border-radius: 18px;
-            background: white;
-            min-height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            font-size: 19px;
-            font-weight: 500;
-            cursor: pointer;
-            border: 1px solid rgba(0,0,0,0.02);
-            transition: all 0.2s ease;
-        }
-
-        #result-box:hover { background: #FAFAFA; }
-
-        /* 呼吸燈效果 */
-        .loading #result-text {
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.3; }
-            100% { opacity: 1; }
-        }
-
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 25px;
-            font-size: 14px;
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
-            z-index: 100;
-        }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <h2>Translator</h2>
-    <div class="input-wrapper">
-        <textarea id="inputText" placeholder="Enter text..."></textarea>
-    </div>
-    <button class="btn-translate" id="btn" onclick="translateText()">Translate</button>
-    <div id="result-box" onclick="manualCopy()">
-        <span id="result-text" style="color: var(--apple-gray);">Result will appear here</span>
-    </div>
-</div>
-
-<div id="toast" class="toast">Copied to clipboard</div>
-
-<script>
-    const apiKey = "AIzaSyBhLAqWjIi2LN3Y2bf_SjBeEImnFD1_k2k"; 
+const apiKey = "你的_API_KEY_貼在這裡"; 
 
     async function translateText() {
         const input = document.getElementById('inputText');
@@ -162,21 +10,18 @@
 
         resultBox.classList.add('loading');
         resultText.innerText = "Processing...";
-        resultText.style.color = "#86868B";
 
         try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+            // 注意：這裡我改成 1.5-flash 試試看，這版本通常最穩
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     contents: [{ 
                         parts: [{ 
-                            text: `你是一個專業翻譯官，且了解SEVENTEEN這個團體以及追星文化。請遵守以下規則：
-1. 如果輸入是中文，請翻譯成「韓文」。
-2. 如果輸入是韓文、英文或其他語言，請翻譯成「繁體中文」。
-3. 只輸出翻譯後的純文字，不要有任何解釋。
-
-內容：\n${text}` 
+                            text: `你是一個專業翻譯官，了解SEVENTEEN。中文翻成韓文，其餘翻成繁體中文。只輸出結果：\n${text}` 
                         }] 
                     }]
                 })
@@ -184,46 +29,24 @@
 
             const data = await response.json();
             
-            // 檢查 API 回傳是否包含錯誤
             if (data.error) {
-                throw new Error(data.error.message);
+                // 這行會把 Google 給的真正原因顯示出來
+                resultText.innerText = "API 錯誤: " + data.error.message;
+                resultBox.classList.remove('loading');
+                return;
             }
 
             const translated = data.candidates[0].content.parts[0].text;
-            
             resultText.innerText = translated;
             resultText.style.color = "#1D1D1F";
             resultBox.classList.remove('loading');
             
-            // 自動複製
             navigator.clipboard.writeText(translated);
             showToast();
-            
-            // 自動清空
             input.value = "";
 
         } catch (error) {
-            console.error(error);
-            resultText.innerText = "Error";
-            resultText.style.color = "#FF3B30"; // Apple 警告紅
+            resultText.innerText = "連線失敗: " + error.message;
             resultBox.classList.remove('loading');
         }
     }
-
-    function showToast() {
-        const toast = document.getElementById('toast');
-        toast.style.opacity = '1';
-        setTimeout(() => { toast.style.opacity = '0'; }, 2000);
-    }
-
-    function manualCopy() {
-        const text = document.getElementById('result-text').innerText;
-        if (text && text !== "Result will appear here" && text !== "Processing..." && text !== "Error") {
-            navigator.clipboard.writeText(text);
-            showToast();
-        }
-    }
-</script>
-
-</body>
-</html>
