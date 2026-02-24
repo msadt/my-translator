@@ -27,7 +27,7 @@
 
         .container {
             background: var(--apple-card);
-            backdrop-filter: blur(20px); /* 毛玻璃效果 */
+            backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             padding: 40px;
             border-radius: 30px;
@@ -89,10 +89,6 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
 
-        .btn-translate:active {
-            transform: scale(0.98);
-        }
-
         #result-box {
             margin-top: 30px;
             padding: 20px;
@@ -106,33 +102,21 @@
             font-size: 19px;
             font-weight: 500;
             cursor: pointer;
-            position: relative;
             border: 1px solid rgba(0,0,0,0.02);
             transition: all 0.2s ease;
         }
 
-        #result-box:hover {
-            background: #FAFAFA;
-        }
+        #result-box:hover { background: #FAFAFA; }
 
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            background: var(--apple-gray);
-            border-radius: 50%;
-            margin-right: 10px;
-            display: inline-block;
-        }
-
-        .loading .status-dot {
-            background: var(--apple-blue);
-            animation: pulse 1s infinite;
+        /* 呼吸燈效果 */
+        .loading #result-text {
+            animation: pulse 1.5s infinite;
         }
 
         @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.5); opacity: 0.5; }
-            100% { transform: scale(1); opacity: 1; }
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
         }
 
         .toast {
@@ -146,6 +130,7 @@
             opacity: 0;
             transition: opacity 0.3s;
             pointer-events: none;
+            z-index: 100;
         }
     </style>
 </head>
@@ -153,13 +138,10 @@
 
 <div class="container">
     <h2>Translator</h2>
-    
     <div class="input-wrapper">
         <textarea id="inputText" placeholder="Enter text..."></textarea>
     </div>
-    
     <button class="btn-translate" id="btn" onclick="translateText()">Translate</button>
-
     <div id="result-box" onclick="manualCopy()">
         <span id="result-text" style="color: var(--apple-gray);">Result will appear here</span>
     </div>
@@ -178,7 +160,6 @@
         
         if (!text) return;
 
-        // UI 反饋：進入載入狀態
         resultBox.classList.add('loading');
         resultText.innerText = "Processing...";
         resultText.style.color = "#86868B";
@@ -188,20 +169,28 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: `你是一個專業翻譯官，且了解SEVENTEEN這個團體以及追星文化。請遵守以下規則：
-                            1. 如果輸入是中文，請翻譯成「韓文」。
-                            2. 如果輸入是韓文、英文或其他語言，請翻譯成「繁體中文」。
-                            3. 只輸出翻譯後的純文字，不要有任何解釋。
-                            
-                            內容
-                            ：\n\n${text}` }] }]
+                    contents: [{ 
+                        parts: [{ 
+                            text: `你是一個專業翻譯官，且了解SEVENTEEN這個團體以及追星文化。請遵守以下規則：
+1. 如果輸入是中文，請翻譯成「韓文」。
+2. 如果輸入是韓文、英文或其他語言，請翻譯成「繁體中文」。
+3. 只輸出翻譯後的純文字，不要有任何解釋。
+
+內容：\n${text}` 
+                        }] 
+                    }]
                 })
             });
 
             const data = await response.json();
+            
+            // 檢查 API 回傳是否包含錯誤
+            if (data.error) {
+                throw new Error(data.error.message);
+            }
+
             const translated = data.candidates[0].content.parts[0].text;
             
-            // 成功後的動作
             resultText.innerText = translated;
             resultText.style.color = "#1D1D1F";
             resultBox.classList.remove('loading');
@@ -210,11 +199,13 @@
             navigator.clipboard.writeText(translated);
             showToast();
             
-            // 自動清空輸入框
+            // 自動清空
             input.value = "";
 
         } catch (error) {
+            console.error(error);
             resultText.innerText = "Error";
+            resultText.style.color = "#FF3B30"; // Apple 警告紅
             resultBox.classList.remove('loading');
         }
     }
@@ -227,7 +218,7 @@
 
     function manualCopy() {
         const text = document.getElementById('result-text').innerText;
-        if (text && text !== "Result will appear here" && text !== "Processing...") {
+        if (text && text !== "Result will appear here" && text !== "Processing..." && text !== "Error") {
             navigator.clipboard.writeText(text);
             showToast();
         }
